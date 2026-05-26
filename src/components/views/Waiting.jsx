@@ -64,22 +64,40 @@ export default function Waiting({ roomCode, onCancel }) {
                         id="btn-share-link"
                         type="button"
                         onClick={async () => {
-                            if (navigator.share) {
-                                try {
-                                    await navigator.share({ title: 'Join my Klicks session', url: shareUrl });
-                                } catch (e) {}
-                            } else {
-                                try {
-                                    await navigator.clipboard.writeText(shareUrl);
-                                    window.showToast('Room link copied to clipboard!', 'success');
-                                } catch (e) {
-                                    window.showToast('Could not copy link.', 'error');
+                            const copyToClipboard = async (text) => {
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    try {
+                                        await navigator.clipboard.writeText(text);
+                                        return true;
+                                    } catch (e) {}
                                 }
+                                try {
+                                    const textArea = document.createElement("textarea");
+                                    textArea.value = text;
+                                    textArea.style.top = "0";
+                                    textArea.style.left = "0";
+                                    textArea.style.position = "fixed";
+                                    textArea.style.opacity = "0";
+                                    document.body.appendChild(textArea);
+                                    textArea.focus();
+                                    textArea.select();
+                                    const successful = document.execCommand("copy");
+                                    document.body.removeChild(textArea);
+                                    return !!successful;
+                                } catch (err) {
+                                    return false;
+                                }
+                            };
+                            const success = await copyToClipboard(shareUrl);
+                            if (success) {
+                                window.showToast('Room link copied to clipboard!', 'success');
+                            } else {
+                                window.showToast('Could not copy link.', 'error');
                             }
                         }}
                         className="flex-grow text-center bg-brand-inverseSurface text-brand-tertiaryFixed border border-brand-tertiaryFixed font-display text-xs py-3 uppercase shadow-[4px_4px_0px_0px_#875400] hover:text-white transition-colors"
                     >
-                        [ SHARE ROOM LINK ]
+                        [ COPY ROOM LINK ]
                     </button>
                 </div>
 

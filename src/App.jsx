@@ -19,6 +19,7 @@ function AppContent() {
     const room = params.get('room');
     if (room && appState === 'landing') {
       setJoinCodeTarget(room);
+      setModalAction('join');
     }
   }, [appState]);
 
