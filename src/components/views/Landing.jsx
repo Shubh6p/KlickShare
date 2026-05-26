@@ -5,6 +5,16 @@ export default function Landing({ onCreateClick, onJoinClick }) {
   const [roomInput, setRoomInput] = useState('');
   const [joinStep, setJoinStep] = useState(0);
 
+  const handleRoomInputChange = (e) => {
+    let raw = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    raw = raw.slice(0, 6);
+    let formatted = raw;
+    if (raw.length > 3) {
+      formatted = raw.slice(0, 3) + '-' + raw.slice(3);
+    }
+    setRoomInput(formatted);
+  };
+
   if (joinStep === 1) {
     return (
       <div className="w-full max-w-lg mx-auto animate-view-fade">
@@ -28,7 +38,7 @@ export default function Landing({ onCreateClick, onJoinClick }) {
                       type="text" 
                       placeholder="XXX-XXX" 
                       value={roomInput}
-                      onChange={(e) => setRoomInput(e.target.value)}
+                      onChange={handleRoomInputChange}
                       className="bg-transparent border-none outline-none w-full font-display text-sm uppercase placeholder-brand-primary/30 text-brand-onSurface" 
                   />
               </div>
