@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 const SIGNALING_SERVER = import.meta.env.VITE_SIGNALING_SERVER || 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000' 
-    : window.location.origin);
+    : 'https://klickshare-backend.onrender.com');
 
 export class KlicksEngine {
     constructor(callbacks) {
