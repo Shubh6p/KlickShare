@@ -6,10 +6,11 @@ import Landing from './components/views/Landing';
 import Waiting from './components/views/Waiting';
 import Workspace from './components/views/Workspace';
 import ModalName from './components/ModalName';
+import GlobalLoader from './components/GlobalLoader';
 import QRCode from 'qrcode';
 
 function AppContent() {
-  const { appState, roomCode, engine, toasts, setToasts } = useWebRTC();
+  const { appState, roomCode, engine, toasts, setToasts, isLoading, loadingMessage, serverStatus } = useWebRTC();
   const [modalAction, setModalAction] = useState(null); // 'create' or 'join'
   const [joinCodeTarget, setJoinCodeTarget] = useState('');
   const [showQR, setShowQR] = useState(false);
@@ -104,6 +105,14 @@ function AppContent() {
               ))}
             </div>
           )}
+
+          {(isLoading || serverStatus === 'waking') && (
+            <GlobalLoader 
+              message={loadingMessage} 
+              isServerWarmup={serverStatus === 'waking'} 
+            />
+          )}
+
         </main>
 
         <Footer />

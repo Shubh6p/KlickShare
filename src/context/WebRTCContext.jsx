@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { KlicksEngine } from '../lib/klicks-engine';
+import { KlicksEngine, SIGNALING_SERVER } from '../lib/klicks-engine';
 
 const WebRTCContext = createContext(null);
 
@@ -14,6 +14,11 @@ export const WebRTCProvider = ({ children }) => {
     const [sharedFiles, setSharedFiles] = useState([]);
     const [isHost, setIsHost] = useState(false);
     const [toasts, setToasts] = useState([]);
+    
+    // Loader State
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
+    const [serverStatus, setServerStatus] = useState('checking'); // checking, waking, ready
 
     // Keep references to state setters so engine can call them without stale closures
     const setters = useRef({
@@ -23,7 +28,9 @@ export const WebRTCProvider = ({ children }) => {
         setChatMessages,
         setActiveTransfers,
         setSharedFiles,
-        setIsHost
+        setIsHost,
+        setIsLoading,
+        setLoadingMessage
     });
 
     // Initialize engine once
@@ -45,8 +52,39 @@ export const WebRTCProvider = ({ children }) => {
         },
         onFileComplete: (files) => {
             setters.current.setSharedFiles([...files]);
+        },
+        onLoadingChange: (loading, message) => {
+            setters.current.setIsLoading(loading);
+            if (message) setters.current.setLoadingMessage(message);
         }
     }));
+
+    // Server Warmup Check
+    useEffect(() => {
+        const checkHealth = async () => {
+            let timeoutId;
+            try {
+                // If the fetch takes longer than 500ms, assume server is waking up
+                timeoutId = setTimeout(() => {
+                    setters.current.setServerStatus?.('waking');
+                    setServerStatus('waking');
+                }, 500);
+                
+                await fetch(`${SIGNALING_SERVER}/health`);
+                
+                clearTimeout(timeoutId);
+                setServerStatus('ready');
+                
+                // If it was waking, we might want to keep "ready" on screen for a split second before hiding
+            } catch (e) {
+                // If fetch fails completely, just hide the loader and let socket logic handle errors
+                clearTimeout(timeoutId);
+                setServerStatus('ready');
+            }
+        };
+        
+        checkHealth();
+    }, []);
 
     useEffect(() => {
         window.showToast = (message, type = 'info', duration = 3500) => {
@@ -89,7 +127,10 @@ export const WebRTCProvider = ({ children }) => {
         isHost,
         engine,
         toasts,
-        setToasts
+        setToasts,
+        isLoading,
+        loadingMessage,
+        serverStatus
     };
 
     return (

@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SIGNALING_SERVER = import.meta.env.VITE_SIGNALING_SERVER || 
+export const SIGNALING_SERVER = import.meta.env.VITE_SIGNALING_SERVER || 
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000' 
     : 'https://klickshare-backend.onrender.com');
@@ -28,7 +28,8 @@ export class KlicksEngine {
             onPeerListUpdate: () => {},
             onSystemMessage: () => {},
             onFileProgress: () => {},
-            onFileComplete: () => {}
+            onFileComplete: () => {},
+            onLoadingChange: () => {}
         };
         
         this.localName = sessionStorage.getItem('klicks_username') || 'Anonymous';
@@ -101,9 +102,11 @@ export class KlicksEngine {
     }
 
     createRoom() {
+        this.callbacks.onLoadingChange(true, 'INITIALIZING ROOM...');
         this.connectSocket(() => {
             const allowLateJoiners = this.allowLateJoinersSetting || false;
             this.socket.emit('create-room', { name: this.localName, maxSize: this.selectedSize, allowLateJoinerFiles: allowLateJoiners }, (response) => {
+                this.callbacks.onLoadingChange(false);
                 if (response.success) {
                     this.roomCode = response.roomCode;
                     this.isHost = true;
@@ -123,8 +126,10 @@ export class KlicksEngine {
     }
 
     joinRoom(code) {
+        this.callbacks.onLoadingChange(true, 'CONNECTING TO PEER...');
         this.connectSocket(() => {
             this.socket.emit('join-room', { roomCode: code, name: this.localName }, (response) => {
+                this.callbacks.onLoadingChange(false);
                 if (response.success) {
                     this.roomCode = response.roomCode;
                     this.isHost = false;
@@ -150,6 +155,7 @@ export class KlicksEngine {
     }
 
     cancelRoom() {
+        this.callbacks.onLoadingChange(true, 'TERMINATING CONNECTION...');
         if (this.socket) {
             this.socket.disconnect();
             this.socket = null;
@@ -164,7 +170,11 @@ export class KlicksEngine {
         this.clearOPFSStorage();
         sessionStorage.removeItem('klicks_session');
         this.sharedFiles = [];
-        this.callbacks.onStateChange('landing', null);
+        
+        setTimeout(() => {
+            this.callbacks.onLoadingChange(false);
+            this.callbacks.onStateChange('landing', null);
+        }, 500); // Small delay to show the loader
     }
 
     initWebRTC(targetPeerId, isInitiator) {
@@ -317,9 +327,11 @@ export class KlicksEngine {
     }
 
     attemptSessionRecovery(roomCode, name) {
+        this.callbacks.onLoadingChange(true, 'RESTORING PREVIOUS SESSION...');
         this.localName = name;
         this.connectSocket(() => {
             this.socket.emit('join-room', { roomCode, name }, (response) => {
+                this.callbacks.onLoadingChange(false);
                 if (response.success) {
                     this.roomCode = response.roomCode;
                     this.isHost = false;
