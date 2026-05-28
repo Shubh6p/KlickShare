@@ -30,7 +30,7 @@ const GlobalLoader = ({ message, isServerWarmup }) => {
           <div className="font-mono text-[10px] text-brand-onSurface/70 tracking-tighter text-center mt-2 border-t border-brand-outlineVariant/30 pt-4">
             The signaling server is hosted on Render free tier.
             <br />
-            It may take up to 60 seconds to wake up from sleep.
+            It may take up to 30 seconds to wake up from sleep.
             <br />
             Please stand by...
           </div>
