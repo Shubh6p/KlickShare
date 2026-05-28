@@ -198,7 +198,8 @@ export class KlicksEngine {
                 console.log(`Connection disconnected for peer ${targetPeerId}. Attempting ICE restart...`);
                 this.attemptIceRestart(targetPeerId);
             } else if (pc.connectionState === 'failed') {
-                console.log(`Connection failed for peer ${targetPeerId}. Cleaning up.`);
+                console.error(`Connection failed for peer ${targetPeerId}. This usually means a firewall or Symmetric NAT blocked the P2P connection and no TURN server is available. Cleaning up.`);
+                window.showToast('Connection blocked by strict network (NAT). A TURN server is required.', 'error', 6000);
                 this.cleanupWebRTC(targetPeerId);
             }
             this.callbacks.onPeerListUpdate(this.peerList);
@@ -235,6 +236,7 @@ export class KlicksEngine {
             this.socket.emit('signal-offer', { targetPeerId: data.peerId, offer: pc.localDescription });
         } catch (err) {
             console.error('Offer error:', err);
+            window.showToast('Failed to create WebRTC offer', 'error');
         }
     }
 
@@ -249,6 +251,7 @@ export class KlicksEngine {
             this.socket.emit('signal-answer', { targetPeerId: senderPeerId, answer: pc.localDescription });
         } catch (err) {
             console.error('Answer error:', err);
+            window.showToast('Failed to handle WebRTC offer', 'error');
         }
     }
 
@@ -275,7 +278,9 @@ export class KlicksEngine {
                 buffer.push(candidate);
                 this.iceCandidateBuffer.set(senderPeerId, buffer);
             }
-        } catch (err) {}
+        } catch (err) {
+            console.error('Error handling ICE candidate:', err);
+        }
     }
 
     async drainIceCandidates(peerId) {
@@ -283,7 +288,11 @@ export class KlicksEngine {
         if (!pc) return;
         const buffer = this.iceCandidateBuffer.get(peerId) || [];
         for (const candidate of buffer) {
-            try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) {}
+            try { 
+                await pc.addIceCandidate(new RTCIceCandidate(candidate)); 
+            } catch (e) {
+                console.error('Failed to add buffered ICE candidate:', e);
+            }
         }
         this.iceCandidateBuffer.set(peerId, []);
     }
