@@ -182,7 +182,10 @@ export class KlicksEngine {
 
         const pc = new RTCPeerConnection({ iceServers: this.iceServers });
         this.peerConnections.set(targetPeerId, pc);
-        this.iceCandidateBuffer.set(targetPeerId, []);
+        
+        if (!this.iceCandidateBuffer.has(targetPeerId)) {
+            this.iceCandidateBuffer.set(targetPeerId, []);
+        }
 
         pc.onicecandidate = (event) => {
             if (event.candidate) {
