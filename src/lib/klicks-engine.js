@@ -188,8 +188,11 @@ export class KlicksEngine {
             { urls: 'stun:stun3.l.google.com:19302' },
             { urls: 'stun:stun4.l.google.com:19302' },
             { urls: 'stun:stun.services.mozilla.com' },
-            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+            { urls: 'stun:stun.relay.metered.ca:80' },
+            { urls: 'turn:global.relay.metered.ca:80', username: 'b13450cf7a86619e5f8e1b95', credential: 'g1NxMVr8s7D1eakC' },
+            { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: 'b13450cf7a86619e5f8e1b95', credential: 'g1NxMVr8s7D1eakC' },
+            { urls: 'turn:global.relay.metered.ca:443', username: 'b13450cf7a86619e5f8e1b95', credential: 'g1NxMVr8s7D1eakC' },
+            { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: 'b13450cf7a86619e5f8e1b95', credential: 'g1NxMVr8s7D1eakC' }
         ];
 
         // Merge backend ICE servers with fallback
