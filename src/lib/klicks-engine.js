@@ -180,7 +180,28 @@ export class KlicksEngine {
     initWebRTC(targetPeerId, isInitiator) {
         if (this.peerConnections.has(targetPeerId)) return this.peerConnections.get(targetPeerId);
 
-        const pc = new RTCPeerConnection({ iceServers: this.iceServers });
+        // Fallback robust STUN servers in case backend config is missing or outdated
+        const fallbackIceServers = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stun.services.mozilla.com' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+        ];
+
+        // Merge backend ICE servers with fallback
+        const mergedIceServers = this.iceServers && this.iceServers.length > 0 
+            ? this.iceServers 
+            : fallbackIceServers;
+
+        const pc = new RTCPeerConnection({ 
+            iceServers: mergedIceServers,
+            iceTransportPolicy: 'all' // Force gathering all possible candidates
+        });
+        
         this.peerConnections.set(targetPeerId, pc);
         
         if (!this.iceCandidateBuffer.has(targetPeerId)) {
